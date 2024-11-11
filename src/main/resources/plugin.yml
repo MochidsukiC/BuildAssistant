@@ -1,0 +1,4 @@
+name: BuildAssistant
+version: '1.0-SNAPSHOT'
+main: jp.houlab.mochidsuki.buildAssistant.Main
+api-version: '1.20'
