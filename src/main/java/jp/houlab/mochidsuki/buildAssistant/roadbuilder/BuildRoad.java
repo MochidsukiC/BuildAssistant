@@ -10,11 +10,14 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+
+import static jp.houlab.mochidsuki.buildAssistant.Main.plugin;
 
 public class BuildRoad {
     public static void build(Player player, Material material,int thick) {
@@ -29,30 +32,39 @@ public class BuildRoad {
         // g(x)の逆数h(x)を算出
         UnivariateFunction h = createReciprocalFunction(g);
 
-        // 任意の点A(a, f(a))
-        double a = 2.5;
-        double f_a = f.value(a);
-
-        // 点Aにおける接線I(x)を算出
-        UnivariateFunction I = createTangentLine(h, a, f_a);
-
-        // 点B, 点Cのx座標b, cを算出
-        double[] bc = findPointsOnTangent(I, a, thick);
-        double b = bc[0];
-        double c = bc[1];
-
-        System.out.println("近似式 f(x): " + f);
-        System.out.println("二階微分 g(x): " + g);
-        System.out.println("逆数 h(x): " + h);
-        System.out.println("接線 I(x): " + I);
-        System.out.println("点A(a, f(a)): (" + a + ", " + f_a + ")");
-        System.out.println("点B(b, I(b)): (" + b + ", " + I.value(b) + ")");
-        System.out.println("点C(c, I(c)): (" + c + ", " + I.value(c) + ")");
-
         for(Axes axes : RoadAxes.get(player)){
             double x = axes.getX();
             double y = axes.getY();
             double z = axes.getZ();
+
+            new BukkitRunnable(){
+
+                @Override
+                public void run() {
+                    player.getWorld().spawnParticle(Particle.ASH,new Location(player.getWorld(),x,f.value(x),z),10);
+                }
+            }.runTaskTimer(plugin,0,1);
+
+            // 任意の点A(a, f(a))
+            double a = x;
+            double f_a = f.value(a);
+
+            // 点Aにおける接線I(x)を算出
+            UnivariateFunction I = createTangentLine(h, a, f_a);
+
+            // 点B, 点Cのx座標b, cを算出
+            double[] bc = findPointsOnTangent(I, a, thick);
+            double b = bc[0];
+            double c = bc[1];
+
+            System.out.println("近似式 f(x): " + f);
+            System.out.println("二階微分 g(x): " + g);
+            System.out.println("逆数 h(x): " + h);
+            System.out.println("接線 I(x): " + I);
+            System.out.println("点A(a, f(a)): (" + a + ", " + f_a + ")");
+            System.out.println("点B(b, I(b)): (" + b + ", " + I.value(b) + ")");
+            System.out.println("点C(c, I(c)): (" + c + ", " + I.value(c) + ")");
+
             for(double i = b; i < (c-b)*10;i = i+0.1){
                 player.getWorld().spawnParticle(Particle.ASH,new Location(player.getWorld(),i,I.value(i),z),10);
             }
@@ -67,6 +79,8 @@ public class BuildRoad {
             x[i] = numbers.get(i).getX();
             y[i] = numbers.get(i).getY();
         }
+
+
         SplineInterpolator interpolator = new SplineInterpolator();
         return interpolator.interpolate(x, y);
     }
